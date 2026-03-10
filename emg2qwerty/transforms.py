@@ -243,3 +243,26 @@ class SpecAugment:
 
         # (..., C, freq, T) -> (T, ..., C, freq)
         return x.movedim(-1, 0)
+
+
+
+
+
+@dataclass
+class AddGaussianNoise:
+    """Injects random Gaussian noise into the raw EMG signal to improve model 
+    robustness against electrical interference and sensor noise.
+
+    Args:
+        mean (float): The average value of the noise (default: 0.0).
+        std (float): The standard deviation/amplitude of the noise (default: 0.05).
+    """
+
+    mean: float = 0.0
+    std: float = 0.05
+
+    def __call__(self, tensor: torch.Tensor) -> torch.Tensor:
+        # generate random static noise with the same shape as the input EMG signal
+        noise = torch.randn_like(tensor) * self.std + self.mean
+        # add it to the original signal
+        return tensor + noise
