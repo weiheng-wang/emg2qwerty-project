@@ -1,0 +1,46 @@
+# @package _global_
+to_tensor:
+  _target_: emg2qwerty.transforms.ToTensor
+  fields: [emg_left, emg_right]
+
+amplitude_scaling:
+  _target_: emg2qwerty.transforms.AmplitudeScaling
+  low: 0.8
+  high: 1.2
+
+band_rotation:
+  _target_: emg2qwerty.transforms.ForEach
+  transform:
+    _target_: emg2qwerty.transforms.RandomBandRotation
+    offsets: [-1, 0, 1]
+
+temporal_jitter:
+  _target_: emg2qwerty.transforms.TemporalAlignmentJitter
+  max_offset: 120
+
+logspec:
+  _target_: emg2qwerty.transforms.LogSpectrogram
+  n_fft: 64
+  hop_length: 16
+
+specaug:
+  _target_: emg2qwerty.transforms.SpecAugment
+  n_time_masks: 3
+  time_mask_param: 25
+  n_freq_masks: 2
+  freq_mask_param: 4
+
+transforms:
+  train:
+    - ${to_tensor}
+    - ${amplitude_scaling}
+    - ${band_rotation}
+    - ${temporal_jitter}
+    - ${logspec}
+    - ${specaug}
+
+  val:
+    - ${to_tensor}
+    - ${logspec}
+
+  test: ${transforms.val}

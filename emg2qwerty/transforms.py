@@ -249,6 +249,27 @@ class SpecAugment:
 
 
 @dataclass
+class ChannelMask:
+    """Zeros out electrode channels beyond ``num_channels`` to simulate
+    using fewer electrodes. Applied before the spectrogram transform.
+
+    Input shape: (T, bands=2, C=16) (before LogSpectrogram).
+
+    Args:
+        num_channels (int): Number of channels to keep per band (1-16).
+            Channels beyond this index are zeroed out.
+    """
+
+    num_channels: int = 16
+
+    def __call__(self, tensor: torch.Tensor) -> torch.Tensor:
+        if self.num_channels < tensor.shape[-1]:
+            tensor = tensor.clone()
+            tensor[..., self.num_channels:] = 0.0
+        return tensor
+
+
+@dataclass
 class AddGaussianNoise:
     """Injects random Gaussian noise into the raw EMG signal to improve model 
     robustness against electrical interference and sensor noise.
@@ -266,3 +287,21 @@ class AddGaussianNoise:
         noise = torch.randn_like(tensor) * self.std + self.mean
         # add it to the original signal
         return tensor + noise
+
+
+@dataclass
+class AmplitudeScaling:
+    """Randomly scales the EMG signal amplitude to simulate varying electrode
+    contact pressure between sessions.
+
+    Args:
+        low (float): Lower bound of the scaling factor (default: 0.8).
+        high (float): Upper bound of the scaling factor (default: 1.2).
+    """
+
+    low: float = 0.8
+    high: float = 1.2
+
+    def __call__(self, tensor: torch.Tensor) -> torch.Tensor:
+        scale = torch.empty(1).uniform_(self.low, self.high).item()
+        return tensor * scale
