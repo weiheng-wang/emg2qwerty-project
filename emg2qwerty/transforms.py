@@ -305,3 +305,17 @@ class AmplitudeScaling:
     def __call__(self, tensor: torch.Tensor) -> torch.Tensor:
         scale = torch.empty(1).uniform_(self.low, self.high).item()
         return tensor * scale
+
+        
+class ChannelAblation:
+    """Permanently zeroes out specific EMG channels to simulate missing hardware sensors."""
+    drop_channels: list
+
+    def __call__(self, tensor: torch.Tensor) -> torch.Tensor:
+        ablated_tensor = tensor.clone()
+        drop_list = list(self.drop_channels)
+        
+        # and strictly zero out the drop_list on the final 'channel' dimension.
+        ablated_tensor[..., drop_list] = 0.0
+            
+        return ablated_tensor

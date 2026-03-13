@@ -13,6 +13,15 @@ temporal_jitter:
   _target_: emg2qwerty.transforms.TemporalAlignmentJitter
   max_offset: 120  # Max 60ms jitter for 2kHz EMG
 
+gaussian_noise:
+  _target_: emg2qwerty.transforms.AddGaussianNoise
+  mean: 0.0
+  std: 0.05
+
+channel_ablation:
+  _target_: emg2qwerty.transforms.ChannelAblation
+  drop_channels: [0, 2, 4, 6, 8, 10, 12, 14]
+  
 logspec:
   _target_: emg2qwerty.transforms.LogSpectrogram
   n_fft: 64
